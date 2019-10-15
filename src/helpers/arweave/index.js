@@ -118,79 +118,28 @@ export const getUserReminders = async (walletAddress) => {
 	return userMemos;
 }
 
-// file helpers
-export const blobToBase64 = (file, callback) => {
-        const reader = new FileReader();
-        reader.onload = function() {
-            var dataUrl = reader.result;
-            var base64 = dataUrl.split(',')[1];
-            callback(base64);
-        };
-        reader.readAsDataURL(file);
-};
+export const getUserDetails = async (walletAddress) => {
+    let arweaveTransactions = [];
 
+	try {
+      arweaveTransactions = await arweave.arql({
+		    op: 'and',
+            expr1:{
+                op: 'equals',
+                expr1: 'App-Name',
+                expr2: 'arweave-id'
+            },
+            expr2:{
+                op: 'equals',
+                expr1: 'from',
+                expr2: address,
+            },
+		});
+	}
+	catch(error) {
+      console.log("unable to get wallet transactions");
+	}
 
-export const base64toBlob = async (b64Data, contentType) => {
-  const url = `data:${contentType};base64,${b64Data}`;
-  const response = await fetch(url);
-  const blob = await response.blob();
-  return blob;
-};
-
-const generateRandomBytes  = async (length) => {
-    var array = new Uint8Array(length)
-    window.crypto.getRandomValues(array)
-
-    return array
-};
-
-export const encryptMail = async (content, subject, pub_key) => {
-    var content_encoder = new TextEncoder()
-    var newFormat = JSON.stringify({ 'subject': subject, 'body': content })
-    var mail_buf = content_encoder.encode(newFormat)
-    var key_buf = await generateRandomBytes(256)
-
-    // Encrypt data segments
-    var encrypted_mail =
-		await arweave.crypto.encrypt(mail_buf, key_buf)
-    var encrypted_key =
-		await window.crypto.subtle.encrypt(
-		    {
-		        name: 'RSA-OAEP'
-		    },
-		    pub_key,
-		    key_buf
-		)
-
-    // Concatenate and return them
-    return arweave.utils.concatBuffers([encrypted_key, encrypted_mail])
-};
-
-export const getPublicKey = async (address) => {
-    var txid = await arweave.wallets.getLastTransactionID(address)
-
-    if (txid == '') {
-        return undefined
-    }
-
-    var tx = await arweave.transactions.get(txid)
-
-    if (tx == undefined) {
-        return undefined
-    }
-
-    var pub_key = arweave.utils.b64UrlToBuffer(tx.owner)
-
-    var keyData = {
-        kty: 'RSA',
-        e: 'AQAB',
-        n: tx.owner,
-        alg: 'RSA-OAEP-256',
-        ext: true
-    }
-
-    var algo = { name: 'RSA-OAEP', hash: { name: 'SHA-256' } }
-
-    return await crypto.subtle.importKey('jwk', keyData, algo, false, ['encrypt'])
-};
+	return arweaveTransactions;
+}
 

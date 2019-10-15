@@ -36,7 +36,9 @@
                                     <h3 class="mb-0">My Reminder</h3>
                                 </div>
                                 <div class="col-4 text-right">
-                                    <a href="#!" class="btn btn-sm btn-primary">Save Reminder</a>
+                                    <base-button type="primary" class="btn-sm" @click="sendTestEmail">
+                                        Save Reminder
+                                    </base-button>
                                 </div>
                             </div>
                         </div>
@@ -146,7 +148,8 @@
 
   // arweave
 
-  
+
+import { sendWeaveMail } from '../helpers/arweave';
 
   export default {
     components: {
@@ -167,6 +170,10 @@
         },
         walletAddress: "" || localStorage.getItem('userArweaveAddress'),
         walletBalance: "" || localStorage.getItem('userArweaveBalance'),
+        userWallet: "" || localStorage.getItem('userWallet'),
+        userName: "User",
+        notificationsAllowed: false,
+        notificationError: ""
       };
     },
     methods: {
@@ -175,9 +182,42 @@
             localStorage.removeItem('loggedIn');
             localStorage.removeItem('userArweaveAddress');
             localStorage.removeItem('userArweaveBalance');
+            localStorage.removeItem('userWallet');
 
             // go back to login
             this.$router.push({ name: 'login'});
+        },
+        async sendTestEmail() {
+
+           
+        },
+
+        allowNotifications(){
+
+          // Let's check if the browser supports notifications
+          if (!("Notification" in window)) {
+            this.notificationError = "This browser does not support desktop notification";
+          }
+
+          // Let's check whether notification permissions have already been granted
+          else if (Notification.permission === "granted") {
+            // If it's okay let's create a notification
+            this.notificationsAllowed = true;
+          }
+
+          // Otherwise, we need to ask the user for permission
+          else if (Notification.permission !== "denied") {
+            Notification.requestPermission().then(function (permission) {
+              // If the user accepts, let's create a notification
+              if (permission === "granted") {
+                const msg = "Thank you for allowing notifications for weave reminders :)";
+                var notification = new Notification(msg);
+              }
+              else {
+                 this.notificationsAllowed = false;
+              }
+            });
+          }
         }
      
     },
@@ -186,4 +226,8 @@
     }
   };
 </script>
-<style></style>
+<style scoped>
+    .btn {
+        color: #ffffff;
+    }
+</style>

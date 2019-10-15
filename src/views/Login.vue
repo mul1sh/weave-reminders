@@ -53,8 +53,7 @@
                         localStorage.setItem('loggedIn', true);
                         localStorage.setItem('userArweaveAddress', userArweaveAddress);
                         localStorage.setItem('userArweaveBalance', userArweaveBalance);
-
-                        console.log(this);
+                        localStorage.setItem('userWallet', JSON.stringify(userWallet));
 
                         router.push({ name: 'reminders'});
 
