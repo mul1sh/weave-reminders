@@ -1,6 +1,6 @@
 {
-  "name": "Weave Reminders",
-  "short_name": "Weave Reminders",
+  "name": "vue-argon-dashboard",
+  "short_name": "vue-argon-dashboard",
   "icons": [
     {
       "src": "./img/icons/android-chrome-192x192.png",

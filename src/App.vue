@@ -1,6 +1,6 @@
 <template>
   <div id="app">
-    <notifications></notifications>
+    <notifications group="error-msg" />
     <router-view/>
   </div>
 </template>

@@ -3,66 +3,73 @@
             <div class="col-lg-5 col-md-7">
                 <div class="card bg-secondary shadow border-0">
                     <div class="card-header bg-transparent pb-5">
-                        <div class="text-muted text-center mt-2 mb-3"><small>Sign in with</small></div>
+                        <div class="text-muted text-center mt-2 mb-3">
+                            <h2>Welcome to Weave Reminders</h2>
+                            <h5>Your future reminders, stored securely in the permaweb</h5>
+                            <h5>To continue, please load a valid Arweave Keystore.</h5>
+                        </div>
                         <div class="btn-wrapper text-center">
-                            <a href="#" class="btn btn-neutral btn-icon">
-                                <span class="btn-inner--icon"><img src="img/icons/common/github.svg"></span>
-                                <span class="btn-inner--text">Github</span>
+                            <a href="#" @click="$refs.file.click()" class="btn btn-primary">
+                                <span class="btn-inner--text">Load Keystore</span>
                             </a>
-                            <a href="#" class="btn btn-neutral btn-icon">
-                                <span class="btn-inner--icon"><img src="img/icons/common/google.svg"></span>
-                                <span class="btn-inner--text">Google</span>
+                        </div>
+                        <div class="text-muted text-center mt-2 mb-3">
+                            <h5>Need tokens or a wallet ?</h5>
+                        </div>
+                        <div class="btn-wrapper text-center">
+                            <a href="https://tokens.arweave.org/" target="_blank" class="btn btn-neutral">
+                                <span class="btn-inner--text">Get Some here</span>
                             </a>
                         </div>
                     </div>
-                    <div class="card-body px-lg-5 py-lg-5">
-                        <div class="text-center text-muted mb-4">
-                            <small>Or sign in with credentials</small>
-                        </div>
-                        <form role="form">
-                            <base-input class="input-group-alternative mb-3"
-                                        placeholder="Email"
-                                        addon-left-icon="ni ni-email-83"
-                                        v-model="model.email">
-                            </base-input>
-
-                            <base-input class="input-group-alternative"
-                                        placeholder="Password"
-                                        type="password"
-                                        addon-left-icon="ni ni-lock-circle-open"
-                                        v-model="model.password">
-                            </base-input>
-
-                            <base-checkbox class="custom-control-alternative">
-                                <span class="text-muted">Remember me</span>
-                            </base-checkbox>
-                            <div class="text-center">
-                                <base-button type="primary" class="my-4">Sign in</base-button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-                <div class="row mt-3">
-                    <div class="col-6">
-                        <a href="#" class="text-light"><small>Forgot password?</small></a>
-                    </div>
-                    <div class="col-6 text-right">
-                        <router-link to="/register" class="text-light"><small>Create new account</small></router-link>
-                    </div>
+                    <input type="file" ref="file" style="display: none" @change="fileSelected"/>
+                   
                 </div>
             </div>
         </div>
 </template>
 <script>
+  
+  import { getWalletAddress, getWalletBalance } from '../helpers/arweave';
+  import router from '../router'
+
   export default {
     name: 'login',
-    data() {
-      return {
-        model: {
-          email: '',
-          password: ''
+    methods: {
+        fileSelected(e){
+
+            const filereader = new FileReader();
+
+            filereader.addEventListener('loadend', async e => {
+                try {
+                    const userWallet = await JSON.parse(e.target.result);
+                    const userArweaveAddress = await getWalletAddress(userWallet);
+                    let userArweaveBalance = '';
+
+                    if (userArweaveAddress) {
+                        userArweaveBalance = await getWalletBalance(userArweaveAddress);
+
+                        // save the login state locally
+                        localStorage.setItem('loggedIn', true);
+                        localStorage.setItem('userArweaveAddress', userArweaveAddress);
+                        localStorage.setItem('userArweaveBalance', userArweaveBalance);
+
+                        console.log(this);
+
+                        router.push({ name: 'reminders'});
+
+                    } else {
+                        throw new Error("Unable to get wallet address!!")
+                    }
+                  
+                }
+                catch(error){
+                  console.log(error);
+                }
+            });
+
+            filereader.readAsText(e.target.files[0]);
         }
-      }
     }
   }
 </script>
