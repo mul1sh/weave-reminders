@@ -3,10 +3,7 @@
     <div class="card-header border-0">
       <div class="row align-items-center">
         <div class="col">
-          <h3 class="mb-0">Social traffic</h3>
-        </div>
-        <div class="col text-right">
-          <base-button size="sm" type="primary">See all</base-button>
+          <h3 class="mb-0">Past Reminders</h3>
         </div>
       </div>
     </div>
@@ -46,7 +43,7 @@
 </template>
 <script>
   export default {
-    name: 'social-traffic-table',
+    name: 'past-reminders',
     data() {
       return {
         tableData: [

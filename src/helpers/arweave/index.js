@@ -132,7 +132,7 @@ export const getUserDetails = async (walletAddress) => {
             expr2:{
                 op: 'equals',
                 expr1: 'from',
-                expr2: address,
+                expr2: walletAddress,
             },
 		});
 	}

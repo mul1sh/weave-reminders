@@ -1,5 +1,8 @@
 <template>
         <div class="row justify-content-center">
+            <base-alert type="danger" v-if="!notificationsAvailable">
+                Sorry it seems notifications are not enabled in your browser, please try upgrading your browser or try a different one in-order to continue!
+            </base-alert>
             <div class="col-lg-5 col-md-7">
                 <div class="card bg-secondary shadow border-0">
                     <div class="card-header bg-transparent pb-5">
@@ -9,9 +12,9 @@
                             <h5>To continue, please load a valid Arweave Keystore.</h5>
                         </div>
                         <div class="btn-wrapper text-center">
-                            <a href="#" @click="$refs.file.click()" class="btn btn-primary">
+                            <base-button @click="$refs.file.click()" type="primary" :disabled="!notificationsAvailable">
                                 <span class="btn-inner--text">Load Keystore</span>
-                            </a>
+                            </base-button>
                         </div>
                         <div class="text-muted text-center mt-2 mb-3">
                             <h5>Need tokens or a wallet ?</h5>
@@ -35,6 +38,11 @@
 
   export default {
     name: 'login',
+    data(){
+        return {
+            notificationsAvailable: false,
+        }
+    },
     methods: {
         fileSelected(e){
 
@@ -68,7 +76,19 @@
             });
 
             filereader.readAsText(e.target.files[0]);
+        },
+        checkIfNotificationsAvailable() {
+            // Let's check if the browser supports notifications
+            if (!("Notification" in window)) {
+                this.notificationsAvailable = false;
+            } else{
+                this.notificationsAvailable = true;
+            }
+           
         }
+    },
+    created(){
+        this.checkIfNotificationsAvailable();
     }
   }
 </script>
