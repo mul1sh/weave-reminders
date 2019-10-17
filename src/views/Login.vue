@@ -12,9 +12,17 @@
                             <h5>To continue, please load a valid Arweave Keystore.</h5>
                         </div>
                         <div class="btn-wrapper text-center">
-                            <base-button @click="$refs.file.click()" type="primary" :disabled="!notificationsAvailable">
+                            <base-button @click="$refs.file.click()" type="primary" :disabled="!notificationsAvailable" v-if="!fetchingUserDetails">
                                 <span class="btn-inner--text">Load Keystore</span>
                             </base-button>
+                            <div class="spinner" v-if="fetchingUserDetails">
+                                Fetching user details
+                                 <atom-spinner
+                                      :animation-duration="1000"
+                                      :size="40"
+                                      :color="'#5e72e4'"
+                                 />
+                            </div>
                         </div>
                         <div class="text-muted text-center mt-2 mb-3">
                             <h5>Need tokens or a wallet ?</h5>
@@ -33,14 +41,19 @@
 </template>
 <script>
   
-  import { getWalletAddress, getWalletBalance } from '../helpers/arweave';
-  import router from '../router'
+  import { getWalletAddress, getWalletBalance, getUserDetails, getTransactionDetails } from '../helpers/arweave';
+  import { AtomSpinner } from 'epic-spinners';
+  import router from '../router';
 
   export default {
+    components: {
+      AtomSpinner
+    },
     name: 'login',
     data(){
         return {
             notificationsAvailable: false,
+            fetchingUserDetails: false
         }
     },
     methods: {
@@ -55,6 +68,8 @@
                     let userArweaveBalance = '';
 
                     if (userArweaveAddress) {
+                        // first of all get the user's details/info
+                        const username = await this.getUserInfo(userArweaveAddress);
                         userArweaveBalance = await getWalletBalance(userArweaveAddress);
 
                         // save the login state locally
@@ -62,6 +77,7 @@
                         localStorage.setItem('userArweaveAddress', userArweaveAddress);
                         localStorage.setItem('userArweaveBalance', userArweaveBalance);
                         localStorage.setItem('userWallet', JSON.stringify(userWallet));
+                        localStorage.setItem('userName', username);
 
                         router.push({ name: 'reminders'});
 
@@ -84,13 +100,55 @@
             } else{
                 this.notificationsAvailable = true;
             }
-           
-        }
+        },
+        getUserInfo(walletAddress){
+            return new Promise(async (resolve, reject) => {
+                    this.fetchingUserDetails = true;
+                    let username = "User";
+                    try {
+
+                        const transactions = await getUserDetails(walletAddress);
+                        transactions.forEach(async(tx) =>{
+
+                            const transaction = await getTransactionDetails(tx);
+                            const data = transaction.get('data', {decode: true, string: true});
+                            // decode the tags
+                            await transaction.get('tags').forEach(tag => {
+                                let key = tag.get('name', {decode: true, string: true});
+                                let value = tag.get('value', {decode: true, string: true});
+
+                                if(key === "Type" && value === "name") {
+                                    username = data;
+                                    resolve(username);
+                                }
+                            });
+
+                        });
+
+                    }
+                    catch(error) {
+                        reject(error);
+                    }
+                    finally{
+                        this.fetchingUserDetails = false;
+                    }
+
+            });
+
+    
+        },
     },
     created(){
         this.checkIfNotificationsAvailable();
     }
   }
 </script>
-<style>
+<style scoped>
+.spinner {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  color: #000000;
+  font-weight: bold;
+}
 </style>

@@ -1,9 +1,14 @@
 <template>
     <div>
         <base-header type="gradient-primary" class="pb-6 pb-8 pt-5 pt-md-3">
-            <div class="offset-11 col-xl-2 col-lg-2">
-                <base-button type="primary" @click="logOut"> Log Out</base-button>
-            </div>
+          <div class="row">
+                <div class="col-xl-3 col-lg-6">
+                   
+                </div>
+                <div class="offset-11 col-xl-2 col-lg-2">
+                  <base-button type="primary" @click="logOut"> Log Out</base-button>
+                </div>
+          </div>
         </base-header>
         <div class="allow-notifs text-center" v-if="!notificationsEnabled && !notificationsDenied">
             <div class="w-100 enable-notifs">
@@ -44,15 +49,22 @@
                     <card shadow type="secondary">
                         <div slot="header" class="bg-white border-0">
                             <div class="row align-items-center">
-                                <div class="col-8">
+                                <div class="col-4">
+                                  Hi {{userName}}, 
+                                </div>
+                                <div class="col-4">
                                    
-                                    <datetime type="datetime" input-id="start-date" v-model="reminderDateTime" use12-hour>
-                                       <label for="start-date" slot="before">Reminder Date: </label>
+                                    <datetime type="datetime" 
+                                              input-id="start-date" 
+                                              :min-datetime="minDatetime"
+                                              v-model="reminderDateTime" 
+                                              use12-hour>
+                                       <label for="start-date" slot="before">Select Reminder Date: </label>
                                     </datetime>
                                 </div>
                                 
                                 <div class="col-4 text-right">
-                                    <base-button type="primary" class="btn-sm" @click="getUserDetails">
+                                    <base-button type="primary" class="btn-sm" @click="save">
                                         Save Reminder
                                     </base-button>
                                 </div>
@@ -87,10 +99,15 @@
 <script>
 
 // arweave
-import { getUserDetails, getTransactionDetails, saveReminder   } from '../helpers/arweave';
+import { saveReminder   } from '../helpers/arweave';
+import { AtomSpinner } from 'epic-spinners';
 
+// reminder tables
 import UpcomingReminders from './Reminders/UpcomingReminders';
 import PastReminders from './Reminders/PastReminders';
+
+// moment
+import moment from 'moment';
 
 
 
@@ -98,6 +115,7 @@ import PastReminders from './Reminders/PastReminders';
     components: {
       UpcomingReminders,
       PastReminders,
+      AtomSpinner
     },
     data() {
       return {
@@ -115,10 +133,11 @@ import PastReminders from './Reminders/PastReminders';
         walletAddress: "" || localStorage.getItem('userArweaveAddress'),
         walletBalance: "" || localStorage.getItem('userArweaveBalance'),
         userWallet: "" || localStorage.getItem('userWallet'),
-        userName: "User",
+        userName: "" || localStorage.getItem('userName'),
         notificationsEnabled: false,
         notificationsDenied: false,
-        reminderDateTime: "",
+        minDatetime: moment().toISOString(),
+        reminderDateTime: moment().toISOString(),
       };
     },
     created(){
@@ -136,39 +155,10 @@ import PastReminders from './Reminders/PastReminders';
             localStorage.removeItem('userArweaveAddress');
             localStorage.removeItem('userArweaveBalance');
             localStorage.removeItem('userWallet');
+            localStorage.removeItem('userName');
 
             // go back to login
             this.$router.push({ name: 'login'});
-        },
-        async getUserDetails(){
-            try {
-
-                const transactions = await getUserDetails(this.walletAddress);
-
-                console.log(transactions);
-
-                transactions.forEach(async(tx) =>{
-
-                    const transaction = await getTransactionDetails(tx);
-
-                    console.log(transaction);
-
-                    const data = transaction.get('data', {decode: true, string: true});
-                    console.log(data);
-
-                    // decode the tags
-                    transaction.get('tags').forEach(tag => {
-                        let key = tag.get('name', {decode: true, string: true});
-                        let value = tag.get('value', {decode: true, string: true});
-                        console.log(`${key} : ${value}`);
-                    });
-
-                });
-
-            }
-            catch(error) {
-                console.log(error);
-            }
         },
         checkIfNotificationsEnabled(){
           // Otherwise, we need to ask the user for permission
@@ -193,7 +183,7 @@ import PastReminders from './Reminders/PastReminders';
           } 
         },
         save(){
-            
+            console.log(localStorage.getItem('userName'));
         }
      
     }
