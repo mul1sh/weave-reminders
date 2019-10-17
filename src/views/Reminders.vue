@@ -64,19 +64,35 @@
                                 </div>
                                 
                                 <div class="col-4 text-right">
-                                    <base-button type="primary" class="btn-sm" @click="save">
-                                        Save Reminder
+                                    <base-button type="primary" 
+                                                 class="btn-sm" 
+                                                 :disabled='reminder.trim() =="" || savingReminder'
+                                                 @click="save">
+
+                                         {{savingReminder & !showFutureDateError ? 'Saving Reminder..':'Save Reminder'}}
+                                        
                                     </base-button>
                                 </div>
+
                             </div>
                         </div>
                         <template>
+                          
                             <form @submit.prevent>
                                 <div class="pl-lg-1">
                                     <div class="form-group">
-                                            <textarea rows="5" class="form-control form-control-alternative" placeholder="Remember to buy groceries.."></textarea>
+                                            <textarea rows="5"
+                                                      v-model="reminder"
+                                                      class="form-control form-control-alternative reminder-text" 
+                                                      placeholder="Remember to buy groceries.."/>
                                     </div>
                                 </div>
+                                <base-alert type="danger" v-if="showFutureDateError">
+                                  Please select a future reminder date!
+                                </base-alert>
+                                <base-alert type="success" v-if="reminderSaved">
+                                    The reminder has been saved successfully :)
+                                </base-alert>
                             </form>
                         </template>
                     </card>
@@ -99,7 +115,7 @@
 <script>
 
 // arweave
-import { saveReminder   } from '../helpers/arweave';
+import { saveReminder, getUserReminders, getTransactionDetails  } from '../helpers/arweave';
 import { AtomSpinner } from 'epic-spinners';
 
 // reminder tables
@@ -138,15 +154,24 @@ import moment from 'moment';
         notificationsDenied: false,
         minDatetime: moment().toISOString(),
         reminderDateTime: moment().toISOString(),
+        reminder:"",
+        reminderSaved: false,
+        savingReminder: false,
+        upcomingReminders: [],
+        pastReminders:[],
+        showFutureDateError: false
       };
     },
     created(){
-       if (Notification.permission === "granted") {
+      if (Notification.permission === "granted") {
          this.notificationsEnabled = true;
-       }
-        if (Notification.permission === "denied") {
+      }
+      if (Notification.permission === "denied") {
          this.notificationsDenied = true;
-       }
+      }
+    },
+    mounted(){
+      this.fetchReminders();
     },
     methods: {
 
@@ -182,8 +207,108 @@ import moment from 'moment';
             });
           } 
         },
-        save(){
-            console.log(localStorage.getItem('userName'));
+        async save(){
+
+          // first of all check if the date is in the fute
+          const now = moment(); //current date
+          const end = moment(this.reminderDateTime); // another date
+          const duration = moment.duration(end.diff(now));
+          const secs = duration.asSeconds();
+        
+          if(secs > 0){
+
+            this.savingReminder = true;
+
+            const reminder = {
+              reminder: this.reminder,
+              reminderDate: this.reminderDateTime,
+            };
+
+            const userWallet = JSON.parse(this.userWallet);
+
+            try {
+              this.reminderSaved = await saveReminder(userWallet, reminder);
+              
+              if(this.reminderSaved) {
+
+                const self = this;
+                let reminderId = undefined;
+                reminderId = setTimeout(function(){
+                    self.reminderSaved = false;
+                    // then clear the timeout
+                    clearTimeout(reminderId);
+                }, 2000);
+
+              }
+
+            }
+            catch(error) {
+              console.log(error);
+            }
+            finally{
+              this.savingReminder = false;
+            }
+
+          } else {
+
+            this.showFutureDateError = true;
+
+            const self = this;
+            let timeoutId = undefined;
+            timeoutId = setTimeout(function(){
+              self.showFutureDateError = false;
+              // then clear the timeout
+              clearTimeout(timeoutId);
+            }, 2000);
+
+          }
+        },
+        async fetchReminders(){
+
+          this.fetchingReminders = true;
+          let reminders = [];
+          try {
+
+              const transactions = await getUserReminders(this.walletAddress);
+              transactions.forEach(async(tx) =>{
+
+                  const transaction = await getTransactionDetails(tx);
+                  const data = transaction.get('data', {decode: true, string: true});
+                  const reminder = {};
+                  reminder.reminder = data;
+                  // decode the tags
+                  const tags = await transaction.get('tags')
+                  tags.forEach(tag => {
+                      let key = tag.get('name', {decode: true, string: true});
+                      let value = tag.get('value', {decode: true, string: true});
+
+                      if(key==="wevr-reminder-date") {
+                          reminder.reminderDate = value;
+
+                          reminders.push(reminder);
+
+                          console.log(reminders);
+                      }
+
+                     
+
+                       
+                  });
+
+              });
+
+
+
+          }
+          catch(error) {
+            console.log(error);
+          }
+          finally{
+              this.fetchingReminders = false;
+          }
+
+          return reminders;
+          
         }
      
     }
@@ -206,5 +331,8 @@ import moment from 'moment';
         color: #f5365c;
         padding-top: 5px;
         padding-bottom: 5px;
+    }
+    .reminder-text{
+       color: #000000;
     }
 </style>

@@ -41,7 +41,10 @@
 </template>
 <script>
   
-  import { getWalletAddress, getWalletBalance, getUserDetails, getTransactionDetails } from '../helpers/arweave';
+  import { getWalletAddress, 
+           getWalletBalance, 
+           getUserDetails, 
+           getTransactionDetails } from '../helpers/arweave';
   import { AtomSpinner } from 'epic-spinners';
   import router from '../router';
 

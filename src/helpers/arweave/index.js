@@ -74,8 +74,7 @@ export const saveReminder = async(userWallet, data) => {
 
 	try {
        let transaction = await arweave.createTransaction({ data: data.reminder}, userWallet);
-	   transaction.addTag('wevr-reminder-date-added', data.dateAdded);
-	   transaction.addTag('wevr-reminder-location', data.memoLocation);
+	   transaction.addTag('wevr-reminder-date', data.reminderDate);
 	   transaction.addTag('wevr-reminder-saved', 'yes');
 
 	   await arweave.transactions.sign(transaction, userWallet);

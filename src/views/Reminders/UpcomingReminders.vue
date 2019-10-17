@@ -12,10 +12,9 @@
       <base-table thead-classes="thead-light"
                   :data="tableData">
         <template slot="columns">
-          <th>Page name</th>
-          <th>Visitors</th>
-          <th>Unique users</th>
-          <th>Bounce rate</th>
+          <th>#</th>
+          <th>Details</th>
+          <th>Date</th>
         </template>
 
         <template slot-scope="{row}">
@@ -28,12 +27,6 @@
           <td>
             {{row.unique}}
           </td>
-          <td>
-            <i class="fas fa-arrow-up text-success mr-3"
-               :class="row.bounceRateDirection === 'up' ? 'text-success': 'text-danger'">
-            </i>
-            {{row.bounceRate}}
-          </td>
         </template>
 
       </base-table>
@@ -43,6 +36,7 @@
 </template>
 <script>
   export default {
+    props:['upcomingReminders'],
     name: 'upcoming-reminders',
     data() {
       return {

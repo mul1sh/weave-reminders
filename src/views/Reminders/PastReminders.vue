@@ -12,9 +12,9 @@
       <base-table thead-classes="thead-light"
                   :data="tableData">
         <template slot="columns">
-          <th>Referral</th>
-          <th>Visitors</th>
-          <th></th>
+          <th>#</th>
+          <th>Details</th>
+          <th>Date</th>
         </template>
 
         <template slot-scope="{row}">
@@ -25,14 +25,7 @@
             {{row.visitors}}
           </td>
           <td>
-            <div class="d-flex align-items-center">
-              <span class="mr-2">{{row.progress}}%</span>
-              <base-progress :type="row.progressType"
-                             class="pt-0"
-                             :show-percentage="false"
-                             :value="row.progress"
-              />
-            </div>
+            {{row.progress}}
           </td>
         </template>
 
