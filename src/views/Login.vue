@@ -122,6 +122,7 @@
 
                                 if(key === "Type" && value === "name") {
                                     username = data;
+                                     this.fetchingUserDetails = false;
                                     resolve(username);
                                 }
                             });
@@ -130,15 +131,12 @@
 
                     }
                     catch(error) {
-                        reject(error);
-                    }
-                    finally{
                         this.fetchingUserDetails = false;
+                        reject(error);
                     }
 
             });
 
-    
         },
     },
     created(){
