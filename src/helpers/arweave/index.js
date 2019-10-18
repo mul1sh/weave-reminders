@@ -111,7 +111,7 @@ export const getUserReminders = async (walletAddress) => {
 	}
 	catch(error) {
 	  console.log(error);
-      console.log("unable to get user memos");
+      console.log("unable to get user reminders");
 	}
 
 	return userMemos;
@@ -136,7 +136,7 @@ export const getUserDetails = async (walletAddress) => {
 		});
 	}
 	catch(error) {
-      console.log("unable to get wallet transactions");
+      console.log("unable to get user details");
 	}
 
 	return arweaveTransactions;

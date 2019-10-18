@@ -5,7 +5,7 @@
                 <div class="col-xl-3 col-lg-6">
                    
                 </div>
-                <div class="offset-11 col-xl-2 col-lg-2">
+                <div class="offset-xl-11 offset-lg-11  col-xl-2 col-lg-2 offset-8 col-5">
                   <base-button type="primary" @click="logOut"> Log Out</base-button>
                 </div>
           </div>
@@ -100,13 +100,27 @@
             </div>
 
             <!--Tables-->
-            <div class="row mt-5">
+            <div>
+              <div class="fetching-reminders" v-if="fetchingReminders">
+                <span id="fetch-rem-txt">
+                    Fetching reminders..
+                </span>
+              
+                <atom-spinner
+                      :animation-duration="1000"
+                      :size="80"
+                      :color="'#5e72e4'"
+                />
+              </div>
+              <div class="row mt-5" v-else>
                 <div class="col-xl-6 mb-5 mb-xl-0">
-                    <upcoming-reminders></upcoming-reminders>
+                    <upcoming-reminders :upcomingReminders="upcomingReminders"/>
                 </div>
                 <div class="col-xl-6">
-                    <past-reminders></past-reminders>
+                    <past-reminders :pastReminders="pastReminders"/>
                 </div>
+              </div>
+                
             </div>
         </div>
 
@@ -127,7 +141,7 @@ import moment from 'moment';
 
 
 
-  export default {
+export default {
     components: {
       UpcomingReminders,
       PastReminders,
@@ -159,7 +173,9 @@ import moment from 'moment';
         savingReminder: false,
         upcomingReminders: [],
         pastReminders:[],
-        showFutureDateError: false
+        showFutureDateError: false,
+        fetchingRemindersInterval: "",
+        fetchingReminders: false,
       };
     },
     created(){
@@ -171,7 +187,18 @@ import moment from 'moment';
       }
     },
     mounted(){
+
+      // fetch the reminders first
       this.fetchReminders();
+
+      // then repeat this every 30 seconds
+      this.fetchingRemindersInterval = setInterval(() => {
+        this.fetchReminders();
+      }, 30000);
+     
+    },
+    beforeDestroy(){
+      clearInterval(this.fetchingRemindersInterval);
     },
     methods: {
 
@@ -270,6 +297,7 @@ import moment from 'moment';
           try {
 
               const transactions = await getUserReminders(this.walletAddress);
+              let count =0;
               transactions.forEach(async(tx) =>{
 
                   const transaction = await getTransactionDetails(tx);
@@ -283,32 +311,46 @@ import moment from 'moment';
                       let value = tag.get('value', {decode: true, string: true});
 
                       if(key==="wevr-reminder-date") {
-                          reminder.reminderDate = value;
-
-                          reminders.push(reminder);
-
-                          console.log(reminders);
+                        reminder.reminderDate = value;
+                        reminders.push(reminder);
                       }
 
-                     
-
-                       
                   });
 
+                  count++;
+
+                  if (count === transactions.length) {
+                    this.fetchingReminders = false;
+                    this.sortReminders(reminders);
+                  }
               });
-
-
-
           }
           catch(error) {
+            this.fetchingReminders = false;
             console.log(error);
           }
-          finally{
-              this.fetchingReminders = false;
-          }
+         
+        },
+        sortReminders(reminders) {
 
-          return reminders;
-          
+          const self = this;
+          // reset the arrays
+          this.upcomingReminders = [];
+          this.pastReminders = [];
+          reminders.forEach((reminder)=>{
+              const now = moment(); //current date
+              const end = moment(reminder.reminderDate); // another date
+              const duration = moment.duration(end.diff(now));
+              const secs = duration.asSeconds();
+
+              reminder.reminderDate = end.format("dddd, MMMM Do YYYY, h:mm:ss a");
+            
+              if(secs > 0){ // an upcoming reminder
+                self.upcomingReminders.push(reminder);
+              } else{ // past reminder
+                self.pastReminders.push(reminder);
+              }
+          });
         }
      
     }
@@ -316,23 +358,34 @@ import moment from 'moment';
 </script>
 <style scoped>
     .btn {
-        color: #ffffff;
+      color: #ffffff;
     }
     .allow-notifs{
-        min-height: 65vh;
+      min-height: 65vh;
     }
     .enable-notifs{
-        font-weight: bold;
-        padding-top: 5px;
-        padding-bottom: 5px;
+      font-weight: bold;
+      padding-top: 5px;
+      padding-bottom: 5px;
     }
     .enable-notifs-settings{
-        font-weight: bold;
-        color: #f5365c;
-        padding-top: 5px;
-        padding-bottom: 5px;
+      font-weight: bold;
+      color: #f5365c;
+      padding-top: 5px;
+      padding-bottom: 5px;
     }
     .reminder-text{
        color: #000000;
+    }
+    .fetching-reminders {
+      display: flex;
+      flex-direction: row;
+      justify-content: center;
+      margin-top: 40px;
+      font-weight: bold;
+    }
+    #fetch-rem-txt {
+      padding-top: 30px;
+      padding-right: 30px;
     }
 </style>
