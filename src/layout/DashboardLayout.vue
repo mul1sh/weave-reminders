@@ -9,7 +9,6 @@
         <sidebar-item
           :link="{
             name: 'Reminders',
-            icon: 'ni ni-notification-70 text-primary',
             path: '/reminders'
           }"
         />

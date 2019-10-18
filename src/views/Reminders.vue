@@ -130,6 +130,11 @@
 
 // arweave
 import { saveReminder, getUserReminders, getTransactionDetails  } from '../helpers/arweave';
+
+// sound
+import { notif } from '../helpers/arweave/sound';
+
+// spinner
 import { AtomSpinner } from 'epic-spinners';
 
 // reminder tables
@@ -387,7 +392,7 @@ export default {
                 const notification = new Notification(msg);
 
                 // notifications sound
-                const audio = new Audio(require('../assets/sounds/notif.mp3'));
+                const audio = new Audio(notif.sound);
                 audio.play();
 
                 // then add it to past reminders
