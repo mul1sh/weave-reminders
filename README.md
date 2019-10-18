@@ -17,6 +17,8 @@ This therefore means a user can store confidential information in these reminder
 
 To use this permaweb app simply enter & save a reminder i.e. `Buy groceries` in a future datetime and continue with your work. Once that future datetime is in the range of 60 seconds, the dApp will display it plus a notification sound alerting you to the reminder. Simple as apple pie :)
 
+The permaweb app also incorporates the [ArweaveID](https://akwek75xzcb7.arweave.net/fGUdNmXFmflBMGI2f9vD7KzsrAc1s1USQgQLgAVT0W0) permaweb app inorder to get a user's details when they login.
+
 # Future Roadmap
 
 Since this is an MVP, I would like to continue working on it and add the following features.
