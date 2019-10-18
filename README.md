@@ -12,3 +12,15 @@ This therefore means a user can store confidential information in these reminder
 1. Clone this repo and from its root run the following two commands,
 -`yarn install` to install the required dependencies
 -`yarn serve` to run the permaweb app.
+
+# How it works
+
+To use this permaweb app simply enter & save a reminder i.e. `Buy groceries` in a future datetime and continue with your work. Once that future datetime is in the range of 60 seconds, the dApp will display it plus a notification sound alerting you to the reminder. Simple as apple pie :)
+
+# Future Roadmap
+
+Since this is an MVP, I would like to continue working on it and add the following features.
+
+- Pagination for the reminder tables
+- Ability to replay and old reminder in the future again
+- Ability to archive old reminders

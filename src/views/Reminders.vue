@@ -81,7 +81,7 @@
                             <form @submit.prevent>
                                 <div class="pl-lg-1">
                                     <div class="form-group">
-                                            <textarea rows="3"
+                                            <textarea rows="1"
                                                       v-model="reminder"
                                                       class="form-control form-control-alternative reminder-text" 
                                                       placeholder="Remember to buy groceries.."/>
