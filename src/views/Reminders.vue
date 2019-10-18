@@ -81,7 +81,7 @@
                             <form @submit.prevent>
                                 <div class="pl-lg-1">
                                     <div class="form-group">
-                                            <textarea rows="5"
+                                            <textarea rows="3"
                                                       v-model="reminder"
                                                       class="form-control form-control-alternative reminder-text" 
                                                       placeholder="Remember to buy groceries.."/>
@@ -103,7 +103,7 @@
             <div>
               <div class="fetching-reminders" v-if="fetchingReminders">
                 <span id="fetch-rem-txt">
-                    Fetching reminders..
+                  Updating Reminders..
                 </span>
               
                 <atom-spinner
@@ -175,6 +175,7 @@ export default {
         pastReminders:[],
         showFutureDateError: false,
         fetchingRemindersInterval: "",
+        showRemindersInterval: "",
         fetchingReminders: false,
       };
     },
@@ -186,19 +187,29 @@ export default {
          this.notificationsDenied = true;
       }
     },
-    mounted(){
+    async mounted(){
 
       // fetch the reminders first
-      this.fetchReminders();
+      await this.fetchReminders();
 
-      // then repeat this every 30 seconds
+      // then show any notifications afterwards
+      await this.showReminders();
+
+      // then repeat fetching reminders every 10 minutes
       this.fetchingRemindersInterval = setInterval(() => {
         this.fetchReminders();
+      }, 600000);
+
+      // then repeat showing reminders every 30 seconds
+      this.showRemindersInterval = setInterval(() => {
+        this.showReminders();
       }, 30000);
      
     },
     beforeDestroy(){
+      // clear the intervals
       clearInterval(this.fetchingRemindersInterval);
+      clearInterval( this.showRemindersInterval);
     },
     methods: {
 
@@ -253,6 +264,12 @@ export default {
 
             const userWallet = JSON.parse(this.userWallet);
 
+            // save the reminder first in upcoming reminders
+            reminder.reminderFormattedDate = end.format("dddd, MMMM Do YYYY, h:mm:ss a");
+            reminder.sortDate = new Date(reminder.reminderDate);
+            this.upcomingReminders.push(reminder);
+            this.upcomingReminders = this.upcomingReminders.sort((a,b) => b.sortDate - a.sortDate);
+          
             try {
               this.reminderSaved = await saveReminder(userWallet, reminder);
               
@@ -343,7 +360,8 @@ export default {
               const duration = moment.duration(end.diff(now));
               const secs = duration.asSeconds();
 
-              reminder.reminderDate = end.format("dddd, MMMM Do YYYY, h:mm:ss a");
+              reminder.reminderFormattedDate = end.format("dddd, MMMM Do YYYY, h:mm:ss a");
+              reminder.sortDate = new Date(reminder.reminderDate);
             
               if(secs > 0){ // an upcoming reminder
                 self.upcomingReminders.push(reminder);
@@ -351,6 +369,41 @@ export default {
                 self.pastReminders.push(reminder);
               }
           });
+
+          // sort the reminders by date
+          this.upcomingReminders = this.upcomingReminders.sort((a,b) => b.sortDate - a.sortDate);
+          this.pastReminders = this.pastReminders.sort((a,b) => b.sortDate - a.sortDate);
+        },
+        showReminders(){
+          this.upcomingReminders .forEach((reminder, index)=>{
+              const now = moment(); //current date
+              const end = moment(reminder.reminderDate); // another date
+              const duration = moment.duration(end.diff(now));
+              const secs = duration.asSeconds();
+
+              if (secs > 0 && secs < 60) {
+                // show the reminder
+                const msg = reminder.reminder;
+                const notification = new Notification(msg);
+
+                // notifications sound
+                const audio = new Audio(require('../assets/sounds/notif.mp3'));
+                audio.play();
+
+                // then add it to past reminders
+                reminder.reminderFormattedDate = end.format("dddd, MMMM Do YYYY, h:mm:ss a");
+                reminder.sortDate = new Date(reminder.reminderDate);
+                this.pastReminders.push(reminder);
+
+                // finally remove it from upcoming reminders array
+                this.upcomingReminders.splice(index,1);
+              }
+          });
+
+          // sort the reminders by date
+          this.upcomingReminders = this.upcomingReminders.sort((a,b) => b.sortDate - a.sortDate);
+          this.pastReminders = this.pastReminders.sort((a,b) => b.sortDate - a.sortDate);
+          
         }
      
     }

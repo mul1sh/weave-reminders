@@ -21,7 +21,7 @@
             {{row.reminder}}
           </th>
           <td>
-            {{row.reminderDate}}
+            {{row.reminderFormattedDate }}
           </td>
         </template>
 
