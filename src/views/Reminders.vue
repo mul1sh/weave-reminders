@@ -391,9 +391,14 @@ export default {
                 const msg = reminder.reminder;
                 const notification = new Notification(msg);
 
-                // notifications sound
-                const audio = new Audio(notif.sound);
-                audio.play();
+                // don't play the notifications sound in mozilla because it has a default sound
+                if (navigator.userAgent.indexOf("Firefox") <= -1) { 
+                  // notifications sound
+                  const audio = new Audio(notif.sound);
+                  audio.play();
+                }
+
+               
 
                 // then add it to past reminders
                 reminder.reminderFormattedDate = end.format("dddd, MMMM Do YYYY, h:mm:ss a");

@@ -25,11 +25,19 @@
                             </div>
                         </div>
                         <div class="text-muted text-center mt-2 mb-3">
+                            <h5>Please note you will need an ArweaveID Public Name inorder to login, otherwise your login will fail.</h5>
+                        </div>
+                        <div class="btn-wrapper text-center">
+                            <a href="https://arweave.net/fGUdNmXFmflBMGI2f9vD7KzsrAc1s1USQgQLgAVT0W0" target="_blank" class="btn btn-secondary">
+                                <span class="btn-inner--text">Set ArweaveID Details Here</span>
+                            </a>
+                        </div>
+                        <div class="text-muted text-center mt-2 mb-3">
                             <h5>Need tokens or a wallet ?</h5>
                         </div>
                         <div class="btn-wrapper text-center">
                             <a href="https://tokens.arweave.org/" target="_blank" class="btn btn-neutral">
-                                <span class="btn-inner--text">Get Some here</span>
+                                <span class="btn-inner--text">Get Some Here</span>
                             </a>
                         </div>
                     </div>
@@ -132,6 +140,7 @@
                     }
                     catch(error) {
                         this.fetchingUserDetails = false;
+                        alert("Sorry unable to fetch your ArweaveID public name :(")
                         reject(error);
                     }
 
