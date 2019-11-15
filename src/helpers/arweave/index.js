@@ -10,6 +10,32 @@ const arweaveOptions = {
 
 const arweave = Arweave.init(arweaveOptions);
 
+
+export const getEncryptedWallet = async (publicKey) => {
+    let arweaveTransactions = [];
+
+	try {
+      arweaveTransactions = await arweave.arql({
+		      op: "and",
+			  expr1: {
+			    op: "equals",
+			    expr1: "ar-auth-public-key",
+			    expr2: publicKey
+			  },
+			  expr2: {
+			    op: "equals",
+			    expr1: "app-id",
+			    expr2: "ar-auth"
+			  }
+		});
+	}
+	catch(error) {
+      console.log("unable to get wallet transactions");
+	}
+
+	return arweaveTransactions;
+}
+
 export const getWalletAddress = async (wallet) => {
     let arweaveAddress = undefined;
 	try {

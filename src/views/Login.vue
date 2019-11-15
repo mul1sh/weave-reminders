@@ -9,11 +9,15 @@
                         <div class="text-muted text-center mt-2 mb-3">
                             <h2>Welcome to Weave Reminders</h2>
                             <h5>Your future reminders, stored securely in the permaweb</h5>
-                            <h5>To continue, please load a valid Arweave Keystore.</h5>
+                            <h5>To continue, please enter your arweave phrase below</h5>
                         </div>
                         <div class="btn-wrapper text-center">
-                            <base-button @click="$refs.file.click()" type="primary" :disabled="!notificationsAvailable" v-if="!fetchingUserDetails">
-                                <span class="btn-inner--text">Load Keystore</span>
+                            <input type="text" id="login-txt" placeholder="i.e. maze eagle quit crash hedgehog work broccoli goat copper bleak flag siege" width="500"  v-model="arweavePhrase"/>
+                            <base-button @click="login" 
+                                         type="primary" 
+                                        :disabled="!notificationsAvailable || arweavePhrase == ''"
+                                         v-if="!fetchingUserDetails">
+                                <span class="btn-inner--text">Login</span>
                             </base-button>
                             <div class="spinner" v-if="fetchingUserDetails">
                                 Fetching user details
@@ -41,8 +45,7 @@
                             </a>
                         </div>
                     </div>
-                    <input type="file" ref="file" style="display: none" @change="fileSelected"/>
-                   
+            
                 </div>
             </div>
         </div>
@@ -52,7 +55,9 @@
   import { getWalletAddress, 
            getWalletBalance, 
            getUserDetails, 
-           getTransactionDetails } from '../helpers/arweave';
+           getTransactionDetails,
+           getEncryptedWallet
+            } from '../helpers/arweave';
   import { AtomSpinner } from 'epic-spinners';
   import router from '../router';
 
@@ -64,17 +69,43 @@
     data(){
         return {
             notificationsAvailable: false,
-            fetchingUserDetails: false
+            fetchingUserDetails: false,
+            arweavePhrase: "",
         }
     },
     methods: {
-        fileSelected(e){
+        async login() {
+            
+            let publicKey = "";
 
-            const filereader = new FileReader();
+            const mnemonic = this.arweavePhrase;
 
-            filereader.addEventListener('loadend', async e => {
+            const length = mnemonic.split(" ").length;
+
+            if (length === 12 ){
+
+                mnemonic.split(" ").forEach((word, index) => {
+                    if (index <= 3) {
+                       publicKey += word;
+                    }
+                });
+
+                publicKey = btoa(publicKey);
+
+                const txs = await getEncryptedWallet(publicKey);
+                const tx = await getTransactionDetails(txs[0]);
+
+                const data = tx.get('data', {decode: true, string: true});
+
+                const encryptedWallet = CryptoJS.AES.decrypt(data, mnemonic);
+
+                const stringWallet = encryptedWallet.toString(CryptoJS.enc.Utf8);
+
+                const userWallet = JSON.parse(stringWallet);
+
+                console.log(userWallet);
+
                 try {
-                    const userWallet = await JSON.parse(e.target.result);
                     const userArweaveAddress = await getWalletAddress(userWallet);
                     let userArweaveBalance = '';
 
@@ -99,10 +130,14 @@
                 }
                 catch(error){
                   console.log(error);
-                }
-            });
 
-            filereader.readAsText(e.target.files[0]);
+                   alert("Sorry, there is an error in getting your wallet, please check your phrase again!")
+                }
+
+            } else {
+                alert("Sorry but the arweave phrase must have exactly 12 words, please check your phrase again!");
+            }
+        
         },
         checkIfNotificationsAvailable() {
             // Let's check if the browser supports notifications
@@ -160,5 +195,9 @@
   justify-content: center;
   color: #000000;
   font-weight: bold;
+}
+#login-txt {
+    width: 100%;
+    margin-bottom: 5px;
 }
 </style>
